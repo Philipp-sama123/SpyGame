@@ -400,7 +400,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: d10db7669d5d6e14ca585519ffa4e659, type: 2}
+      objectReference: {fileID: 9100000, guid: c368199ae776fc541a3a65db84dbf3e5, type: 2}
     - target: {fileID: 1102361549381260, guid: 0c806973f17bfde43b92a6b3d321a13e, type: 3}
       propertyPath: m_IsActive
       value: 1

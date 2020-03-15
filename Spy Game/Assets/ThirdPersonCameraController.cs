@@ -9,15 +9,15 @@ public class ThirdPersonCameraController : MonoBehaviour
     [SerializeField] Transform Target, Player;
     private float mouseX, mouseY;
 
-/// <summary>
-/// Start is called on the frame when a script is enabled just before
-/// any of the Update methods is called the first time.
-/// </summary>
-void Start()
-{
-    Cursor.visible = false; 
-    Cursor.lockState= CursorLockMode.Locked; 
-}
+    /// <summary>
+    /// Start is called on the frame when a script is enabled just before
+    /// any of the Update methods is called the first time.
+    /// </summary>
+    void Start()
+    {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
     void LateUpdate()
     {
         CameraControl();
@@ -30,6 +30,15 @@ void Start()
         mouseY = Mathf.Clamp(mouseY, -35, 60);
 
         transform.LookAt(Target);
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            RotateCamera();
+        }
+
+    }
+
+    private void RotateCamera()
+    {
         Target.rotation = Quaternion.Euler(mouseY, mouseX, 0);
         Player.rotation = Quaternion.Euler(0, mouseX, 0);
     }
