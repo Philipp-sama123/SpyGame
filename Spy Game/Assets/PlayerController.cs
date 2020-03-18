@@ -1,27 +1,121 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] Transform cameraReference;
     [SerializeField] Animator animator;
-    [SerializeField] float speed = 10f;
+    // [SerializeField] private float speed = 10f;        // How fast the player can move
+    [SerializeField] private float walkSpeed = 2f;
+    [SerializeField] private float runSpeed = 5f;
+    [SerializeField] private float currentSpeed = 0f;
+    [SerializeField] private float speedSmoothVelocity = 0f;
+    [SerializeField] private float speedSmoothTime = 0.1f;
+    [SerializeField] private float rotationSpeed = 0.1f;
+    [SerializeField] private float gravity = 3f;
+    private bool isCrouching = false;
 
-    void Update()
+    [SerializeField] private Transform mainCameraTransform;
+
+    [SerializeField] private CharacterController characterController;
+    private void Start()
+    {
+        characterController = GetComponent<CharacterController>();
+        animator = GetComponentInChildren<Animator>();
+        mainCameraTransform = Camera.main.transform;
+    }
+    private void Update()
     {
         // TODO: everything (!)
         float verticalInput = Input.GetAxis("Vertical");
         float horizontalInput = Input.GetAxis("Horizontal");
-        animator.SetFloat("verticalInput", verticalInput);
-        animator.SetFloat("horizontalInput", horizontalInput);
 
-        Vector3 playerMovement = new Vector3(horizontalInput, 0f, verticalInput).normalized * speed * Time.deltaTime; // (!) normalized (!)
-        transform.Translate(playerMovement, Space.Self);
+        // animator.SetFloat("horizontalInput", horizontalInput);
+        HandleCrouching(); 
+        MoveCharacter();
+    }
 
-        Debug.Log("Horizontal: " + Input.GetAxis("Horizontal").ToString());
-        Debug.Log("Vertical: " + Input.GetAxis("Vertical").ToString());
+    private void HandleCrouching()
+    {
+         if (Input.GetButtonDown("Crouch"))
+        {
+            isCrouching = !isCrouching; 
+            animator.SetBool("IsCrouching",isCrouching);
+        }
+    }
+
+    private void MoveCharacter()
+    {
+        Vector2 movementInput = new Vector2(
+            Input.GetAxisRaw("Horizontal"),
+            Input.GetAxisRaw("Vertical")
+        ); // get Axis? 
+        Vector3 forwardVector = mainCameraTransform.forward;
+        Vector3 right = mainCameraTransform.right;
+
+        forwardVector.Normalize();
+        right.Normalize();
+
+        Vector3 desiredMoveDirection = (forwardVector * movementInput.y + right * movementInput.x).normalized;
+        Vector3 gravityVector = Vector3.zero;
+
+        // applies gravity
+        if (!characterController.isGrounded)
+        {
+            gravityVector.y -= gravity;
+        }
+
+        if (desiredMoveDirection != Vector3.zero)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(desiredMoveDirection), rotationSpeed);
+        }
+
+        float targetSpeed = walkSpeed * movementInput.magnitude;
+
+        // check for running
+        if (Input.GetButton("Sprint") && !isCrouching)
+        {
+            targetSpeed = runSpeed * movementInput.magnitude;
+            animator.SetFloat("MovementSpeed", 1f * movementInput.magnitude, speedSmoothTime, Time.deltaTime);
+        }
+        else
+        {
+
+            animator.SetFloat("MovementSpeed", 0.5f * movementInput.magnitude, speedSmoothTime, Time.deltaTime);
+        }
+
+        currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVelocity, speedSmoothTime);
+
+        characterController.Move(desiredMoveDirection * currentSpeed * Time.deltaTime);
+        characterController.Move(gravityVector * Time.deltaTime);
+    }
+
+    void FixedUpdate()
+    {
+        /*     
+             // right is shorthand for (1,0,0) or the x value            
+             // forward is short for (0,0,1) or the z value 
+             Vector3 direction = (cameraReference.right * Input.GetAxis("Horizontal")) + (cameraReference.forward * Input.GetAxis("Vertical"));
+
+             direction.y = 0;//Keeps character upright against slight fluctuations
+
+             if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+             {
+                 //rotate from this /........to this............../.........at this speed 
+                 rigidBody.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), turnSpeed * Time.deltaTime);
+                 rigidBody.velocity = transform.forward * speed;
+
+             }
+     */
     }
 }
+
+
+
+
+
 
 // using UnityEngine;
 // using System.Collections;
